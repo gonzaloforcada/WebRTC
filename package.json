@@ -1,0 +1,16 @@
+{
+  "name": "completeserver",
+  "version": "1.0.0",
+  "engines": {
+    "npm": "^3.10.10",
+    "node-static": "^0.7.9"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
