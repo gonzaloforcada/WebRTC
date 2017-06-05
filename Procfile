@@ -1,1 +1,1 @@
-web: node ./completeNodeServerWithDataChannel.js
+web: node completeNodeServerWithDataChannel.js
