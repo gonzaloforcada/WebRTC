@@ -1,16 +1,19 @@
 {
-  "name": "completeserver",
+  "name": "cap5",
   "version": "1.0.0",
-  "engines": {
-    "npm": "^3.10.10",
-    "node-static": "^0.7.9"
-  },
-  "devDependencies": {},
+    "engines":{
+      "node": "6.10.2"
+    },
+    "dependencies": {
+      "node-static": "0.7.9",
+      "socket.io": "2.0.2"
+    },
+  "description": "",
+  "main": "completeNodeServerWithDataChannel.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": ""
+  "license": "ISC"
 }

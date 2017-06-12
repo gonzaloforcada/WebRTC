@@ -16,14 +16,17 @@ window.onbeforeunload = function(e){
 var sendChannel, receiveChannel;
 var sendButton = document.getElementById("sendButton");
 var sendTextarea = document.getElementById("dataChannelSend");
-var receiveTextarea = document.getElementById("dataChannelReceive");
+//var receiveTextarea = document.getElementById("dataChannelReceive");
+
+//area de mensajes
+var div = document.getElementById('mensajes');
 
 // HTML5 <video> elements
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
 // Handler associated with 'Send' button
-sendButton.onclick = sendData;
+//sendButton.onclick = sendData;
 
 // Flags...
 var isChannelReady = false;
@@ -52,19 +55,38 @@ var sdpConstraints = {};
 /////////////////////////////////////////////
 
 // Let's get started: prompt user for input (room name)
-var room = prompt('Enter room name:');
+var room;
+var username;
+function funcionEntrar(){
+    room = document.getElementById('channel').value;
+    username = document.getElementById('uname').value;
+    document.getElementById('id01').style.display='none';
+    if ((room !== "") && (username != "")) {
+	console.log('Intentando unirse o crear: ', room);
+	// enviar el mensaje 'create or join' al servidor
+	socket.emit('create or join', room, username);
+    document.getElementById('roomName').insertAdjacentHTML('afterbegin',room);
+    } else {
+        alert("Nombre de usuario y/o de la sala vac\u00EDo. Actualice la p\u00E1gina y rellene todos los campos para continuar.");
+    }
+}
 
+function funcionEnviar(){
+	var myResponse = document.getElementById('mensajeEnviar').value;
+    document.getElementById('mensajeEnviar').value = '';
+    div.insertAdjacentHTML( 'beforeEnd', '<p class="local">' +
+		myResponse + '</p><br>');
+	//Send it to remote peer (through server)
+	socket.emit('message', {
+		channel: room,
+		message: myResponse,
+        username:username});
+}
 
 var urlServer = location.origin;
 console.log("socket.io client connecting to server ", urlServer );
 // Connect to signalling server
 var socket = io.connect(urlServer);
-
-// Send 'Create or join' message to singnalling server
-if (room !== '') {
-  console.log('Create or join room', room);
-  socket.emit('create or join', room);
-}
 
 // Set getUserMedia constraints
 var constraints = {video: true, audio: true};
@@ -96,10 +118,10 @@ function handleUserMediaError(error){
 
 // Handle 'created' message coming back from server:
 // this peer is the initiator
-socket.on('created', function (room){
-  console.log('Created room ' + room);
+socket.on('created', function (room,username){
+  console.log('Se ha creado la sala ' + room);
   isInitiator = true;
-  
+  document.getElementById("user0").insertAdjacentHTML('afterbegin',username);
   // Call getUserMedia()
   navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
   console.log('Getting user media with constraints', constraints);
@@ -111,22 +133,66 @@ socket.on('created', function (room){
 // this peer arrived too late :-(
 socket.on('full', function (room){
   console.log('Room ' + room + ' is full');
+  div.insertAdjacentHTML( 'beforeEnd', '<p class="system"> Esta sala está llena, por favor, actualice la página e inténtelo de nuevo con otra sala</p><br>');
 });
+
+/////////////////////////////////////////////////////////////////////////////////////
+//Control de presencia
+//Mensaje 'disconnected' que viene del servidor cuando otro usuario cierra el navegador
+ socket.on('user disconnected', function (clientes) {
+     var numClients= clientes.length+1;
+     for (var i = 0; i < numClients; i++) {
+        document.getElementById("user"+i).innerHTML = "";
+    }
+    actualizarListaNombres(clientes);
+ });
+
+//Funcion para actualizar la lista de usuarios conectados. Coge el total de clientes y mira los que son de la misma sala
+function actualizarListaNombres(clientes){
+    var roomClients = [];
+    var rooms= [];
+    for (var i = 0; i < clientes.length; i++) {
+      for (var j=0; j < rooms.length; j++){
+          if(rooms[j] == clientes[i].room){
+              rooms.push(clientes[i].room);
+          }
+      }
+    }    
+        //if (rooms[i] == clientes[i].room)
+        //rooms.push(clientes[i].room);
+    for (var i = 0; i < clientes.length; i++) {
+    if(clientes[i].room == room){
+       roomClients.push(clientes[i]);
+        }
+    }
+    }
+    for (var i = 0; i < roomClients.length; i++) {
+        document.getElementById("user"+i).innerHTML = roomClients[i].username;
+    }
+}
 
 // Handle 'join' message coming back from server:
 // another peer is joining the channel
-socket.on('join', function (room){
+socket.on('join', function (room,clientes,numClients){
   console.log('Another peer made a request to join room ' + room);
   console.log('This peer is the initiator of room ' + room + '!');
+  actualizarListaNombres(clientes, room);
+  //var roomClients = actualizarListaNombres(clientes, room);
+  //var roomSize = roomClients.length-1;
+  //document.getElementById("user"+roomSize).insertAdjacentHTML('afterbegin',roomClients[roomSize].username);
   isChannelReady = true;
 });
 
 // Handle 'joined' message coming back from server:
 // this is the second peer joining the channel
-socket.on('joined', function (room){
+socket.on('joined', function (room, clientes){
   console.log('This peer has joined room ' + room);
   isChannelReady = true;
-  
+  actualizarListaNombres(clientes, room);
+  //var roomClients = actualizarListaNombres(clientes, room);
+    //for (var i = 0; i < roomClients.length; i++) {
+      // document.getElementById("user"+i).insertAdjacentHTML('afterbegin',roomClients[i].username);
+    //}
   // Call getUserMedia()
   navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
   console.log('Getting user media with constraints', constraints);
@@ -140,6 +206,8 @@ socket.on('log', function (array){
 // Receive message from the other peer via the signalling server
 socket.on('message', function (message){
   console.log('Received message:', message);
+     div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">'+message.username+': ' +
+		message.message + '</p><br>');
   if (message.message === 'got user media') {
     checkAndStart();
   } else if (message.message.type === 'offer') {
@@ -174,7 +242,7 @@ function sendMessage(message){
 ////////////////////////////////////////////////////
 // Channel negotiation trigger function
 function checkAndStart() {
-  if (!isStarted && typeof localStream != 'undefined' && isChannelReady) {  
+  if (!isStarted && /*typeof localStream != 'undefined' &&*/ isChannelReady) {  
     createPeerConnection();
     isStarted = true;
     if (isInitiator) {
@@ -223,14 +291,6 @@ function createPeerConnection() {
   }
 }
 
-// Data channel management
-function sendData() {
-  var data = sendTextarea.value;
-  if(isInitiator) sendChannel.send(data);
-  else receiveChannel.send(data);
-  trace('Sent data: ' + data);
-}
-
 // Handlers...
 
 function gotReceiveChannel(event) {
@@ -243,7 +303,9 @@ function gotReceiveChannel(event) {
 
 function handleMessage(event) {
   trace('Received message: ' + event.data);
-  receiveTextarea.value += event.data + '\n';
+  //receiveTextarea.value += event.data + '\n';
+    div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">' +
+		event.data + '</p><br>');
 }
 
 function handleSendChannelStateChange() {

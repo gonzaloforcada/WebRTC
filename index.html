@@ -2,47 +2,62 @@
 <html>
 <head>
 
-<title>Very simple WebRTC application with a Node.js signalling server</title>
-
+<title>WebRTC client</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id='mainDiv'>
+<!-- formulario inicial-->    
+<div id="id01" class="modal">
+  <div class="modal-content animate">
+    <div class="imgcontainer">
+      <img src="public/img_avatar2.png" alt="Avatar" class="avatar">
+    </div>
 
-	<table border="1" width="100%">
-		<tr>
-			<th>
-				Local video
-			</th>
-			<th>
-				'Remote' video
-			</th>
-		</tr>
-		<tr>
-			<td>
-				<video id="localVideo" muted autoplay></video>
-			</td>
-			<td>
-				<video id="remoteVideo" autoplay></video>
-			</td>
-		</tr>
-		<tr>
-			<td align="center">
-				<textarea rows="4" cols="60" id="dataChannelSend" disabled
-			placeholder="This will be enabled once the data channel is up..."></textarea>
-			</td>
-			<td align="center">
-				<textarea rows="4" cols="60" id="dataChannelReceive" disabled></textarea>
-			</td>
-		</tr>
-		<tr>
-			<td align="center">
-				<button id="sendButton" disabled>Send</button>
-			</td>
-			<td></td>
-		</tr>
-	</table>
+    <div class="container">
+      <label><b>Nombre de usuario</b></label>
+      <input type="text" placeholder="Nombre de usuario" id="uname" required>
+
+      <label><b>Sala</b></label>
+      <input type="text" placeholder="Sala" id="channel" required>
+        
+      <button type="submit" onclick="funcionEntrar()">Entrar</button>
+    </div>
+  </div>
+</div>
+    
+<!-- Menú lateral -->
+<div class="menu">
+    <ul class="users" id="users">
+        <li class="room" id="roomName"></li>
+        <li class="user" id="user0"></li>
+        <li class="user" id="user1"></li>
+        <li class="user" id="user2"></li>
+        <li class="user" id="user3"></li>
+    </ul>
+    <div class="files">
+        <li class="room" id="filesShared">Ficheros compartidos</li>
+        <li>
+             <form id="fileInfo">
+                <input type="file" id="fileInput" name="files"/>
+            </form>
+        </li>
+        <li class="user"><a id="download"></a>Fichero 1</li>
+        <li class="user">Fichero 2</li>
+        <li class="user">Fichero 3</li>
+        <li class="user">Fichero 4</li>
+    </div>
+</div>
+<div class="chat">
+    <div id="mensajes">
+    </div>
+    
+    <div class="enviar">
+        <textarea rows="2" cols="70" id="mensajeEnviar" 
+			placeholder="Escribir mensaje"></textarea>
+        <button class="button" id="botonEnviar" onclick="funcionEnviar()" style="vertical-align:middle"><span>Enviar </span></button>
+    </div>    
 </div>
 
 <script src='/socket.io/socket.io.js'></script>
