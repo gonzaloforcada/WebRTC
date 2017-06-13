@@ -67,7 +67,8 @@ function funcionEntrar(){
 	socket.emit('create or join', room, username);
     document.getElementById('roomName').insertAdjacentHTML('afterbegin',room);
     } else {
-        alert("Nombre de usuario y/o de la sala vac\u00EDo. Actualice la p\u00E1gina y rellene todos los campos para continuar.");
+        div.insertAdjacentHTML( 'beforeEnd', '<p class="system"> Nombre de usuario y/o de la sala vac\u00EDo. Actualice la p\u00E1gina y rellene todos los campos para continuar.</p><br>');
+        alert("Complete los campos antes de continuar");
     }
 }
 
@@ -76,11 +77,26 @@ function funcionEnviar(){
     document.getElementById('mensajeEnviar').value = '';
     div.insertAdjacentHTML( 'beforeEnd', '<p class="local">' +
 		myResponse + '</p><br>');
+    myResponse = username+": "+myResponse;
 	//Send it to remote peer (through server)
-	socket.emit('message', {
+	/*socket.emit('message', {
 		channel: room,
 		message: myResponse,
         username:username});
+        */
+    return myResponse;
+}
+
+function iniciarVideollamada(){
+    document.getElementById('videoContainer').style.display='block';
+    document.getElementById('localVideo').style.display='inline-block';
+    document.getElementById('remoteVideo').style.display='inline-block';
+}
+
+function finalizarVideollamada(){
+    document.getElementById('videoContainer').style.display='none';
+    document.getElementById('localVideo').style.display='none';
+    document.getElementById('remoteVideo').style.display='none';
 }
 
 var urlServer = location.origin;
@@ -118,10 +134,13 @@ function handleUserMediaError(error){
 
 // Handle 'created' message coming back from server:
 // this peer is the initiator
-socket.on('created', function (room,username){
+socket.on('created', function (clientes){
   console.log('Se ha creado la sala ' + room);
+  console.log('Clientes conectados: ' + clientes);
   isInitiator = true;
-  document.getElementById("user0").insertAdjacentHTML('afterbegin',username);
+  actualizarListaNombres(clientes);
+  div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK"> Se ha creado la sala '+room+'</p><br>');
+    //document.getElementById("user0").insertAdjacentHTML('afterbegin',username);
   // Call getUserMedia()
   navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
   console.log('Getting user media with constraints', constraints);
@@ -133,62 +152,52 @@ socket.on('created', function (room,username){
 // this peer arrived too late :-(
 socket.on('full', function (room){
   console.log('Room ' + room + ' is full');
-  div.insertAdjacentHTML( 'beforeEnd', '<p class="system"> Esta sala está llena, por favor, actualice la página e inténtelo de nuevo con otra sala</p><br>');
+  div.insertAdjacentHTML( 'beforeEnd', '<p class="system"> Esta sala est&aacute; llena, por favor, actualice la p&aacute;gina e int&eacute;ntelo de nuevo con otra sala</p><br>');
 });
 
 /////////////////////////////////////////////////////////////////////////////////////
 //Control de presencia
 //Mensaje 'disconnected' que viene del servidor cuando otro usuario cierra el navegador
- socket.on('user disconnected', function (clientes) {
-     var numClients= clientes.length+1;
-     for (var i = 0; i < numClients; i++) {
-        document.getElementById("user"+i).innerHTML = "";
-    }
+socket.on('other peer disconnected', function(clientes, username){
+    console.log(username+' ha abandonado la conversaci&oacute;n');
+    div.insertAdjacentHTML( 'beforeEnd', '<p class="system">'+username+' ha abandonado la conversación</p><br>');
     actualizarListaNombres(clientes);
- });
-
+});
 //Funcion para actualizar la lista de usuarios conectados. Coge el total de clientes y mira los que son de la misma sala
 function actualizarListaNombres(clientes){
-    var roomClients = [];
-    var rooms= [];
+    //var roomClients = [];
+    //cuenta con el índice de la nueva lista
+    var j = 0;
+    //limpiar la lista antigua. Pone vacios todos los campos user de index.html
+    for (var i = 0; i < 2; i++) {
+        document.getElementById("user"+i).innerHTML = ""; 
+    }
     for (var i = 0; i < clientes.length; i++) {
-      for (var j=0; j < rooms.length; j++){
-          if(rooms[j] == clientes[i].room){
-              rooms.push(clientes[i].room);
+      if(clientes[i].room == room){
+          document.getElementById("user"+j).innerHTML = clientes[i].username; 
+          j++;
           }
-      }
-    }    
-        //if (rooms[i] == clientes[i].room)
-        //rooms.push(clientes[i].room);
-    for (var i = 0; i < clientes.length; i++) {
-    if(clientes[i].room == room){
-       roomClients.push(clientes[i]);
-        }
-    }
-    }
-    for (var i = 0; i < roomClients.length; i++) {
-        document.getElementById("user"+i).innerHTML = roomClients[i].username;
-    }
+      }  
 }
 
 // Handle 'join' message coming back from server:
 // another peer is joining the channel
-socket.on('join', function (room,clientes,numClients){
+socket.on('join', function (clientes, username){
   console.log('Another peer made a request to join room ' + room);
   console.log('This peer is the initiator of room ' + room + '!');
-  actualizarListaNombres(clientes, room);
   //var roomClients = actualizarListaNombres(clientes, room);
   //var roomSize = roomClients.length-1;
   //document.getElementById("user"+roomSize).insertAdjacentHTML('afterbegin',roomClients[roomSize].username);
   isChannelReady = true;
+  actualizarListaNombres(clientes);
+  div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK"> Se ha conectado '+username+' a la sala '+room+'</p><br>');
 });
 
 // Handle 'joined' message coming back from server:
 // this is the second peer joining the channel
-socket.on('joined', function (room, clientes){
+socket.on('joined', function (clientes){
   console.log('This peer has joined room ' + room);
   isChannelReady = true;
-  actualizarListaNombres(clientes, room);
   //var roomClients = actualizarListaNombres(clientes, room);
     //for (var i = 0; i < roomClients.length; i++) {
       // document.getElementById("user"+i).insertAdjacentHTML('afterbegin',roomClients[i].username);
@@ -196,6 +205,8 @@ socket.on('joined', function (room, clientes){
   // Call getUserMedia()
   navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
   console.log('Getting user media with constraints', constraints);
+  actualizarListaNombres(clientes);
+  div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">Se ha conectado con &eacute;xito a la sala '+room+'</p><br>');
 });
 
 // Server-sent log message...
@@ -206,8 +217,6 @@ socket.on('log', function (array){
 // Receive message from the other peer via the signalling server
 socket.on('message', function (message){
   console.log('Received message:', message);
-     div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">'+message.username+': ' +
-		message.message + '</p><br>');
   if (message.message === 'got user media') {
     checkAndStart();
   } else if (message.message.type === 'offer') {
@@ -235,14 +244,15 @@ function sendMessage(message){
   console.log('Sending message: ', message);
   socket.emit('message', {
               channel: room,
-              message: message});
+              message: message,
+              username: username});
 }
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 // Channel negotiation trigger function
 function checkAndStart() {
-  if (!isStarted && /*typeof localStream != 'undefined' &&*/ isChannelReady) {  
+  if (!isStarted && typeof localStream != 'undefined' && isChannelReady) {  
     createPeerConnection();
     isStarted = true;
     if (isInitiator) {
@@ -254,6 +264,7 @@ function checkAndStart() {
 /////////////////////////////////////////////////////////
 // Peer Connection management...
 function createPeerConnection() {
+    console.log("cretarepeerConnection");
   try {
     pc = new RTCPeerConnection(pc_config, pc_constraints);
     
@@ -291,6 +302,13 @@ function createPeerConnection() {
   }
 }
 
+// Data channel management
+function sendData() {
+  var data = funcionEnviar();
+  if(isInitiator) sendChannel.send(data);
+  else receiveChannel.send(data);
+  trace('Sent data: ' + data);
+}
 // Handlers...
 
 function gotReceiveChannel(event) {
@@ -304,8 +322,8 @@ function gotReceiveChannel(event) {
 function handleMessage(event) {
   trace('Received message: ' + event.data);
   //receiveTextarea.value += event.data + '\n';
-    div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">' +
-		event.data + '</p><br>');
+    
+    div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">'+event.data+'</p><br>');
 }
 
 function handleSendChannelStateChange() {
@@ -313,13 +331,13 @@ function handleSendChannelStateChange() {
   trace('Send channel state is: ' + readyState);
   // If channel ready, enable user's input
   if (readyState == "open") {
-    dataChannelSend.disabled = false;
-    dataChannelSend.focus();
-    dataChannelSend.placeholder = "";
-    sendButton.disabled = false;
+   // dataChannelSend.disabled = false;
+    //dataChannelSend.focus();
+    //dataChannelSend.placeholder = "";
+    //sendButton.disabled = false;
   } else {
-    dataChannelSend.disabled = true;
-    sendButton.disabled = true;
+    //dataChannelSend.disabled = true;
+    //sendButton.disabled = true;
   }
 }
 
@@ -395,6 +413,7 @@ function handleRemoteStreamRemoved(event) {
 // Clean-up functions...
 
 function hangup() {
+  socket.emit('user disconnected', username);
   console.log('Hanging up.');
   stop();
   sendMessage('bye');

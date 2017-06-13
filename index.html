@@ -26,7 +26,7 @@
     </div>
   </div>
 </div>
-    
+
 <!-- Menú lateral -->
 <div class="menu">
     <ul class="users" id="users">
@@ -36,7 +36,10 @@
         <li class="user" id="user2"></li>
         <li class="user" id="user3"></li>
     </ul>
-    <div class="files">
+    <div class="settings" id="opciones">
+        <li class="room" id="video" onclick="iniciarVideollamada()">Videollamada</li>
+    </div>
+   <!-- <div class="files">
         <li class="room" id="filesShared">Ficheros compartidos</li>
         <li>
              <form id="fileInfo">
@@ -47,16 +50,34 @@
         <li class="user">Fichero 2</li>
         <li class="user">Fichero 3</li>
         <li class="user">Fichero 4</li>
-    </div>
+    </div>-->
 </div>
 <div class="chat">
+        
+<div id="videoContainer">
+    <table>
+        <tr>
+			<td>
+				<video id="localVideo" muted autoplay></video>
+			</td>
+			<td>
+				<video id="remoteVideo" autoplay></video>
+			</td>
+		</tr>
+        <tr >
+            <td colspan="2">
+                <button class="button" onclick="finalizarVideollamada()"><span>Finalizar </span></button>
+            </td>
+        </tr>
+    </table>
+</div>
     <div id="mensajes">
     </div>
     
     <div class="enviar">
         <textarea rows="2" cols="70" id="mensajeEnviar" 
 			placeholder="Escribir mensaje"></textarea>
-        <button class="button" id="botonEnviar" onclick="funcionEnviar()" style="vertical-align:middle"><span>Enviar </span></button>
+        <button class="button" id="botonEnviar" onclick="sendData()" style="vertical-align:middle"><span>Enviar </span></button>
     </div>    
 </div>
 

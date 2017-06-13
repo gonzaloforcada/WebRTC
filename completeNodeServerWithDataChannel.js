@@ -23,7 +23,7 @@ var file = new(static.Server)();
 // rely on our instance of node-static to serve the files
 var app = https.createServer(options, function (req, res) {
   file.serve(req, res);
-}).listen(8080);
+}).listen(process.env.PORT || 8080);
 
 // Use socket.io JavaScript library for real-time web applications
 var io = require('socket.io').listen(app);
@@ -35,29 +35,39 @@ var clientes = [];
 io.sockets.on('connection', function (socket){
     
   //Evento que se ejecuta cuando algun usuario cierra su navegador
- socket.on('disconnect', function () {  
-     var i = clientes.indexOf(socket);
-      clientes.splice(i, 1);
-     console.log('Se ha ido uno. Lista de clientes: ', clientes);
-    socket.broadcast.emit('user disconnected', clientes);
+ socket.on('user disconnected', function (username) {  
+     //var i = clientes.indexOf(socket);
+      //clientes.splice(i, 1);
+     //var c = socket.client;
+     //console.log('Se ha ido: ', c);
+    //socket.broadcast.emit('user disconnected', clientes);
+    console.log('Se ha ido uno: ', username);
+     var room;
+     for (var i=0; i<clientes.length ; i++){
+         if (clientes[i].username == username){
+             room = clientes[i].room;
+             clientes.splice(i,1);
+         }
+     }
+     console.log(clientes);
+     io.sockets.in(room).emit('other peer disconnected', clientes, username);
   });
 
-  socket.on('create or join', function (room,username) { // Handle 'create or join' messages
+  socket.on('create or join', function (room, username) { // Handle 'create or join' messages
     var numClients = io.sockets.adapter.rooms[room]?io.sockets.adapter.rooms[room].length:0;
-    clientes.push({username:username, room:room});
     console.log('S --> Room ' + room + ' has ' + numClients + ' client(s)');
     console.log('S --> Request to create or join room', room);
-    console.log('lista de clientes: ', clientes);
-
     if(numClients == 0){ // First client joining...
+      clientes.push({username:username, room:room});
       socket.join(room);
-      socket.emit('created', room, username);
-    } else if (numClients <= 4) { // ...
-      io.sockets.in(room).emit('join', room,clientes, numClients);
-      socket.join(room);
-      socket.emit('joined', room, clientes);
+      socket.emit('created',clientes);
+    } else if (numClients == 2) { // ...
+       socket.emit('full', room);
     } else { // max 4 clients
-      socket.emit('full', room);
+      clientes.push({username:username, room:room});
+      io.sockets.in(room).emit('join', clientes, username);
+      socket.join(room);
+      socket.emit('joined',clientes);
     }
   });
 
