@@ -1,1 +1,1 @@
-web: node completeNodeServerWithDataChannel.js -p $PORT
+web: node completeNodeServerWithDataChannel.js
