@@ -54,6 +54,12 @@ io.sockets.on('connection', function (socket){
   });
 
   socket.on('create or join', function (room, username) { // Handle 'create or join' messages
+      for (var i=0; i<clientes.length ; i++){
+         if (clientes[i].username == username){
+            socket.emit('repeated');
+             return;
+         }
+     }
     var numClients = io.sockets.adapter.rooms[room]?io.sockets.adapter.rooms[room].length:0;
     console.log('S --> Room ' + room + ' has ' + numClients + ' client(s)');
     console.log('S --> Request to create or join room', room);
@@ -72,7 +78,7 @@ io.sockets.on('connection', function (socket){
   });
 
   socket.on('message', function (message) { // Handle 'message' messages
-    console.log('S --> got message: '+message.message+' from: '+message.username);
+    console.log('S --> got message: '+message+' from: '+message.username);
     // channel-only broadcast...
     socket.broadcast.to(message.channel).emit('message', message);
   });

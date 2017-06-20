@@ -72,6 +72,24 @@ function funcionEntrar(){
     }
 }
 
+//para habilitar el enter enviar
+document.getElementById("uname").onkeydown = function () {
+    if (window.event.keyCode == '13') {
+        funcionEntrar();
+    }
+}
+document.getElementById("channel").onkeydown = function () {
+    if (window.event.keyCode == '13') {
+        funcionEntrar();
+    }
+}
+document.getElementById("mensajeEnviar").onkeydown = function () {
+    if (window.event.keyCode == '13') {
+        sendData();
+    }
+}
+
+
 function funcionEnviar(){
 	var myResponse = document.getElementById('mensajeEnviar').value;
     document.getElementById('mensajeEnviar').value = '';
@@ -89,14 +107,10 @@ function funcionEnviar(){
 
 function iniciarVideollamada(){
     document.getElementById('videoContainer').style.display='block';
-    document.getElementById('localVideo').style.display='inline-block';
-    document.getElementById('remoteVideo').style.display='inline-block';
 }
 
 function finalizarVideollamada(){
     document.getElementById('videoContainer').style.display='none';
-    document.getElementById('localVideo').style.display='none';
-    document.getElementById('remoteVideo').style.display='none';
 }
 
 var urlServer = location.origin;
@@ -136,7 +150,6 @@ function handleUserMediaError(error){
 // this peer is the initiator
 socket.on('created', function (clientes){
   console.log('Se ha creado la sala ' + room);
-  console.log('Clientes conectados: ' + clientes);
   isInitiator = true;
   actualizarListaNombres(clientes);
   div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK"> Se ha creado la sala '+room+'</p><br>');
@@ -155,12 +168,17 @@ socket.on('full', function (room){
   div.insertAdjacentHTML( 'beforeEnd', '<p class="system"> Esta sala est&aacute; llena, por favor, actualice la p&aacute;gina e int&eacute;ntelo de nuevo con otra sala</p><br>');
 });
 
+// nombre repetido
+socket.on('repeated',function(){
+  div.insertAdjacentHTML( 'beforeEnd', '<p class="system"> Este nombre est&aacute; siendo utilizado por otra persona, por favor, actualice la p&aacute;gina e int&eacute;ntelo de nuevo con otro nombre</p><br>');
+});
+
 /////////////////////////////////////////////////////////////////////////////////////
 //Control de presencia
 //Mensaje 'disconnected' que viene del servidor cuando otro usuario cierra el navegador
 socket.on('other peer disconnected', function(clientes, username){
     console.log(username+' ha abandonado la conversaci&oacute;n');
-    div.insertAdjacentHTML( 'beforeEnd', '<p class="system">'+username+' ha abandonado la conversación</p><br>');
+    div.insertAdjacentHTML( 'beforeEnd', '<p class="system">'+username+' ha abandonado la conversaci\u00F3n</p><br>');
     actualizarListaNombres(clientes);
 });
 //Funcion para actualizar la lista de usuarios conectados. Coge el total de clientes y mira los que son de la misma sala
@@ -178,6 +196,63 @@ function actualizarListaNombres(clientes){
           j++;
           }
       }  
+}
+
+var fileInput = document.querySelector('input#fileInput');
+fileInput.addEventListener('change', handleFileInputChange, false);
+function handleFileInputChange(){
+    document.getElementById("enviarArchivo").style.display = 'block';
+}
+
+
+function enviarArchivo() {
+    document.getElementById("enviarArchivo").style.display = 'none';
+  var file = fileInput.files[0];
+    if(file.size==0){
+        alert("Seleccione un archivo");
+    }
+  console.log('Enviando archivo');
+  var chunkSize = 100000;
+  var sliceFile = function(offset) {
+    var reader = new window.FileReader();
+    reader.onload = (function() {
+      return function(e) {
+          if(isInitiator){
+               sendChannel.send("file");
+               sendChannel.send(file.name);
+               sendChannel.send(e.target.result);
+          } else {
+               receiveChannel.send("file");
+               receiveChannel.send(file.name);
+               receiveChannel.send(e.target.result);
+          }
+       
+        if (file.size > offset + e.target.result.byteLength) {
+          window.setTimeout(sliceFile, 0, offset + chunkSize);
+        }
+      };
+    })(file);
+    var slice = file.slice(offset, offset + chunkSize);
+    reader.readAsArrayBuffer(slice);
+  };
+  sliceFile(0);
+}
+
+var downloadAnchor = document.querySelector('a#download');
+function onReceiveMessageCallback(event, fileNameReceived) {
+  // trace('Received Message ' + event.data.byteLength);
+    console.log("reciviendo fichero");
+  var receiveBuffer = [];
+  receiveBuffer.push(event.data);
+  var receivedSize = event.data.byteLength;
+  // we are assuming that our signaling protocol told
+  // about the expected file size (and name, hash, etc).
+    var received = new window.Blob(receiveBuffer);
+    receiveBuffer = [];
+    downloadAnchor.href = URL.createObjectURL(received);
+    downloadAnchor.download = fileNameReceived;
+    downloadAnchor.textContent = "Haga click para descargar "+fileNameReceived;
+    downloadAnchor.style.display = 'block'; 
 }
 
 // Handle 'join' message coming back from server:
@@ -319,11 +394,28 @@ function gotReceiveChannel(event) {
   receiveChannel.onclose = handleReceiveChannelStateChange;
 }
 
+//controlar los eventos recibidos en datachannel
+var receivingFile=false;
+var receivingFile2=false;
+var fileNameReceived;
 function handleMessage(event) {
   trace('Received message: ' + event.data);
-  //receiveTextarea.value += event.data + '\n';
-    
-    div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">'+event.data+'</p><br>');
+    if(event.data == "file"){ 
+        console.log("Estado 1");
+        receivingFile=true;
+    } else if (receivingFile == true){
+        console.log("Estado 2");
+        receivingFile = false;
+        receivingFile2=true;
+        fileNameReceived = event.data;
+    } else if (receivingFile2 ==true){
+        div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">Has recibido un fichero. Mira en el men&uacute; lateral para descargarlo</p><br>');  
+        onReceiveMessageCallback(event, fileNameReceived);
+        receivingFile2 = false;
+    } else{
+        console.log("Normal");
+     div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">'+event.data+'</p><br>');   
+    }
 }
 
 function handleSendChannelStateChange() {
@@ -346,13 +438,13 @@ function handleReceiveChannelStateChange() {
   trace('Receive channel state is: ' + readyState);
   // If channel ready, enable user's input
   if (readyState == "open") {
-	    dataChannelSend.disabled = false;
-	    dataChannelSend.focus();
-	    dataChannelSend.placeholder = "";
-	    sendButton.disabled = false;
+	    //dataChannelSend.disabled = false;
+	    //dataChannelSend.focus();
+	    //dataChannelSend.placeholder = "";
+	    //sendButton.disabled = false;
 	  } else {
-	    dataChannelSend.disabled = true;
-	    sendButton.disabled = true;
+	    //dataChannelSend.disabled = true;
+	    //sendButton.disabled = true;
 	  }
 }
 

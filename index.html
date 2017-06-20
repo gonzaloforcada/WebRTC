@@ -21,7 +21,6 @@
 
       <label><b>Sala</b></label>
       <input type="text" placeholder="Sala" id="channel" required>
-        
       <button type="submit" onclick="funcionEntrar()">Entrar</button>
     </div>
   </div>
@@ -35,22 +34,18 @@
         <li class="user" id="user1"></li>
         <li class="user" id="user2"></li>
         <li class="user" id="user3"></li>
+        <li></li>
+        <li></li>
+        <li></li>
     </ul>
     <div class="settings" id="opciones">
         <li class="room" id="video" onclick="iniciarVideollamada()">Videollamada</li>
+        <li></li>
+        <li class="room" id="archivos" onclick="enviarArchivo()">Enviar archivos</li>
+        <input type="file" id="fileInput" name="files"/>
+        <a id="download"></a>
+        <button class="button" id="enviarArchivo" onclick="enviarArchivo()"><span>Enviar</span></button>
     </div>
-   <!-- <div class="files">
-        <li class="room" id="filesShared">Ficheros compartidos</li>
-        <li>
-             <form id="fileInfo">
-                <input type="file" id="fileInput" name="files"/>
-            </form>
-        </li>
-        <li class="user"><a id="download"></a>Fichero 1</li>
-        <li class="user">Fichero 2</li>
-        <li class="user">Fichero 3</li>
-        <li class="user">Fichero 4</li>
-    </div>-->
 </div>
 <div class="chat">
         
