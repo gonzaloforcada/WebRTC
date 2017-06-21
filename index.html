@@ -25,6 +25,29 @@
     </div>
   </div>
 </div>
+    
+    <!-- formulario inicial-->    
+<div id="game">
+    <p id="gameInfo">Tres en raya</p>
+    <table>
+      <tr>
+          <td class="cell" onclick="eleccionCelda(1)" id="cell1"></td>
+          <td class="cell" onclick="eleccionCelda(2)" id="cell2"></td>
+          <td class="cell" onclick="eleccionCelda(3)" id="cell3"></td>
+      </tr>
+      <tr>
+          <td class="cell" onclick="eleccionCelda(4)" id="cell4"></td>
+          <td class="cell" onclick="eleccionCelda(5)" id="cell5"></td>
+          <td class="cell" onclick="eleccionCelda(6)" id="cell6"></td>
+      </tr>
+      <tr>
+          <td class="cell" onclick="eleccionCelda(7)" id="cell7"></td>
+          <td class="cell" onclick="eleccionCelda(8)" id="cell8"></td>
+          <td class="cell" onclick="eleccionCelda(9)" id="cell9"></td>
+      </tr>
+    </table>
+    <button id="finalizarPartida" onclick="finJuego()"> Finalizar </button>
+</div>
 
 <!-- Menú lateral -->
 <div class="menu">
@@ -45,6 +68,8 @@
         <input type="file" id="fileInput" name="files"/>
         <a id="download"></a>
         <button class="button" id="enviarArchivo" onclick="enviarArchivo()"><span>Enviar</span></button>
+        <li></li>
+        <li class="room" id="juego" onclick="iniciarJuego()">Tres en raya</li>
     </div>
 </div>
 <div class="chat">

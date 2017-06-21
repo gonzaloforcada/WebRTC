@@ -105,6 +105,213 @@ function funcionEnviar(){
     return myResponse;
 }
 
+var playing=false;
+var player1=false;
+var turn=false;
+var gameinfo = document.getElementById("gameInfo");
+function iniciarJuego(){
+    document.getElementById('game').style.display='block';
+    if(!playing){
+        playing=true;
+        if(isInitiator) {
+            sendChannel.send("startGame");
+            player1=true;
+            turn=true;
+            gameinfo.innerHTML="Es tu turno";
+        } 
+        else {
+            receiveChannel.send("startGame");
+            player1=true;
+            turn=true;
+             gameinfo.innerHTML="Es tu turno";
+        }
+    }
+}
+
+var tablero = [0,0,0,0,0,0,0,0,0];
+function paintCell(cellvalue,local){
+    numfichas++;
+   if(local){
+       if(player1){
+            document.getElementById("cell"+cellvalue).style.backgroundColor="blue";
+            tablero[cellvalue-1] = 1;
+        } else {
+            document.getElementById("cell"+cellvalue).style.backgroundColor="red";
+            tablero[cellvalue-1] = 2;
+        } 
+   } else {
+       if(player1){
+            document.getElementById("cell"+cellvalue).style.backgroundColor="red";
+            tablero[cellvalue-1] = 2;
+        } else {
+            document.getElementById("cell"+cellvalue).style.backgroundColor="blue";
+            tablero[cellvalue-1] = 1;
+        } 
+   }
+}
+function checkWinner(){
+    var winner=0;
+   if (tablero[0] == 1 && tablero[1] == 1 && tablero[2] ==1){
+       winner=1;
+   } if (tablero[3] == 1 && tablero[4] == 1 && tablero[5] ==1){
+      winner=1;
+   } if (tablero[6] == 1 && tablero[7] == 1 && tablero[8] ==1){
+       winner=1;
+   } if (tablero[0] == 1 && tablero[3] == 1 && tablero[6] ==1){
+      winner=1;
+   } if (tablero[1] == 1 && tablero[4] == 1 && tablero[7] ==1){
+       winner=1;
+   } if (tablero[2] == 1 && tablero[5] == 1 && tablero[8] ==1){
+       winner=1;
+   } if (tablero[0] == 1 && tablero[4] == 1 && tablero[8] ==1){
+       winner=1;
+   } if (tablero[2] == 1 && tablero[4] == 1 && tablero[6] ==1){
+       winner=1;
+   } if (tablero[0] == 2 && tablero[1] == 2 && tablero[2] ==2){
+       winner=2;
+   } if (tablero[3] == 2 && tablero[4] == 2 && tablero[5] ==2){
+      winner=2;
+   } if (tablero[6] == 2 && tablero[7] == 2 && tablero[8] ==2){
+       winner=2;
+   } if (tablero[0] == 2 && tablero[3] == 2 && tablero[5] ==2){
+       winner=2;
+   } if (tablero[1] == 2 && tablero[4] == 2 && tablero[7] ==2){
+       winner=2;
+   } if (tablero[2] == 2 && tablero[5] == 2 && tablero[8] ==2){
+       winner=2;
+   } if (tablero[0] == 2 && tablero[4] == 2 && tablero[8] ==2){
+       winner=2;
+   } if (tablero[2] == 2 && tablero[4] == 2 && tablero[6] ==2){
+       winner=2;
+   } if (winner == 1){
+       turn =false;
+       if(player1){
+           gameinfo.innerHTML = "Enhorabuena, has ganado";
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">¡Has ganado!</p><br>'); 
+       } else {
+           gameinfo.innerHTML="Has perdido";
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="system">¡Has perdido!</p><br>'); 
+       }
+   } else if (winner == 2){
+       turn =false;
+       if(!player1){
+           gameinfo.innerHTML="Enhorabuena, has ganado";
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">¡Has ganado!</p><br>'); 
+       } else {
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="system">¡Has perdido!</p><br>');
+           gameinfo.innerHTML="Has perdido";
+       }
+   } else if(numfichas==9){
+       numfichas=0;
+        gameinfo.innerHTML="Empate. Sal y vuelve a entrar para desempatar";
+   }
+}
+
+function sendGameInfo(cellvalue){
+    if(isInitiator) {
+            sendChannel.send(cellvalue);
+            turn=false;
+         gameinfo.innerHTML="Esperando al oponente";
+        } 
+        else {
+            receiveChannel.send(cellvalue);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+        }
+}
+
+var numfichas=0;
+function eleccionCelda (cellvalue){
+    if (turn){
+        if(tablero[cellvalue-1] == 0) {
+        switch (cellvalue) {
+        case 1:
+            console.log("eleccion celda");
+            paintCell(1,true);
+            sendGameInfo(1);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 2:
+            paintCell(2,true);
+            sendGameInfo(2);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 3:
+            paintCell(3,true);
+            sendGameInfo(3);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 4:
+            paintCell(4,true);
+            sendGameInfo(4);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 5:
+            paintCell(5,true);
+            sendGameInfo(5);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 6:
+            paintCell(6,true);
+            sendGameInfo(6);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 7:
+            paintCell(7,true);
+            sendGameInfo(7);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 8:
+            paintCell(8,true);
+            sendGameInfo(8);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+        case 9:
+            paintCell(9,true);
+            sendGameInfo(9);
+            turn=false;
+            gameinfo.innerHTML="Esperando al oponente";
+            checkWinner();
+            break;
+      }
+    }
+    }
+}
+
+function finJuego(){
+    tablero = [0,0,0,0,0,0,0,0,0];
+    numfichas =0;
+    for (var i=1; i<10; i++){
+        document.getElementById("cell"+i).style.backgroundColor="white";
+    } document.getElementById('game').style.display='none';
+    if(playing){
+    if(isInitiator) {
+            sendChannel.send("endGame");
+            playing=false;
+        } 
+        else {
+            receiveChannel.send("endGame");
+            playing=false;
+        }
+    }
+}
+
 function iniciarVideollamada(){
     document.getElementById('videoContainer').style.display='block';
 }
@@ -415,6 +622,17 @@ function handleMessage(event) {
         div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">Has recibido un fichero. Mira en el men&uacute; lateral para descargarlo</p><br>');  
         onReceiveMessageCallback(event, fileNameReceived);
         receivingFile2 = false;
+    } else if(event.data=="startGame") { 
+        playing=true;
+        iniciarJuego();
+    } else if(event.data == "endGame") {
+        playing=false;
+        finJuego();
+    }  else if(playing) {
+        turn= true;
+        gameinfo.innerHTML ="Es tu turno";
+        paintCell(event.data,false);
+        checkWinner();
     } else{
         console.log("Normal");
      div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">'+event.data+'</p><br>');   

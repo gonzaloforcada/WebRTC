@@ -95,6 +95,23 @@ img.avatar {
     width: 80%; /* Could be more or less, depending on screen size */
 }
 
+#game{
+    display: none;
+    width:auto;
+    left: 40%;
+    top: 5%;
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    background-color: white;
+    text-align: center;
+}
+
+.cell{
+    width:150px;
+    height: 150px;
+    border: 2px solid;
+}
+
 .menu {
     width: 25%;
     min-height:100%;
@@ -114,11 +131,16 @@ li{
     text-align: center;
 }
 
-#roomName, #video, #archivos{
+#roomName, #video, #archivos, #juego{
     background-color: darkblue;
     color: white;
     font-size: 20px;
     cursor: pointer;
+}
+
+#gameInfo{
+    font-size: 20px;
+    color: blue;
 }
 
 .chat {
