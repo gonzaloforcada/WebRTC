@@ -155,7 +155,8 @@ socket.on('created', function (clientes){
   div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK"> Se ha creado la sala '+room+'</p><br>');
     //document.getElementById("user0").insertAdjacentHTML('afterbegin',username);
   // Call getUserMedia()
-  navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
+  //navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
+    //checkAndStart();
   console.log('Getting user media with constraints', constraints);
   
   checkAndStart();
@@ -264,6 +265,7 @@ socket.on('join', function (clientes, username){
   //var roomSize = roomClients.length-1;
   //document.getElementById("user"+roomSize).insertAdjacentHTML('afterbegin',roomClients[roomSize].username);
   isChannelReady = true;
+    checkAndStart();
   actualizarListaNombres(clientes);
   div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK"> Se ha conectado '+username+' a la sala '+room+'</p><br>');
 });
@@ -278,7 +280,8 @@ socket.on('joined', function (clientes){
       // document.getElementById("user"+i).insertAdjacentHTML('afterbegin',roomClients[i].username);
     //}
   // Call getUserMedia()
-  navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
+  //navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
+   // checkAndStart();
   console.log('Getting user media with constraints', constraints);
   actualizarListaNombres(clientes);
   div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">Se ha conectado con &eacute;xito a la sala '+room+'</p><br>');
@@ -327,7 +330,7 @@ function sendMessage(message){
 ////////////////////////////////////////////////////
 // Channel negotiation trigger function
 function checkAndStart() {
-  if (!isStarted && typeof localStream != 'undefined' && isChannelReady) {  
+  if (!isStarted && /*typeof localStream != 'undefined' &&*/ isChannelReady) {  
     createPeerConnection();
     isStarted = true;
     if (isInitiator) {
@@ -344,7 +347,7 @@ function createPeerConnection() {
     pc = new RTCPeerConnection(pc_config, pc_constraints);
     
     console.log("Calling pc.addStream(localStream)! Initiator: " + isInitiator);
-    pc.addStream(localStream);
+    //pc.addStream(localStream);
     
     pc.onicecandidate = handleIceCandidate;
     console.log('Created RTCPeerConnnection with:\n' +
@@ -356,8 +359,8 @@ function createPeerConnection() {
       return;
   }
 
-  pc.onaddstream = handleRemoteStreamAdded;
-  pc.onremovestream = handleRemoteStreamRemoved;
+ // pc.onaddstream = handleRemoteStreamAdded;
+//  pc.onremovestream = handleRemoteStreamRemoved;
 
   if (isInitiator) {
     try {

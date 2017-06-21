@@ -3,8 +3,8 @@ var static = require('node-static');
 var https = require('https');
 
 // Change directory to path of current JavaScript program
-//var process = require('process');
-//process.chdir(__dirname);
+var process = require('process');
+process.chdir(__dirname);
 //descomentar las dos líneas anteriores si no se quiere poner el subdirectorio al final, por ej. https://...:8080/cap5/
 
 // Read key and certificates required for https
