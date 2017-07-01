@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<title>WebRTC client</title>
-<link rel="stylesheet" href="style.css">
+    <title>WebRTC client</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" media="(max-width: 1000px)" href="styleDevices.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
@@ -50,7 +51,7 @@
 </div>
 
 <!-- Menú lateral -->
-<div class="menu">
+<div class="menu" id="menu">
     <ul class="users" id="users">
         <li class="room" id="roomName"></li>
         <li class="user" id="user0"></li>
@@ -64,15 +65,17 @@
     <div class="settings" id="opciones">
         <li class="room" id="video" onclick="iniciarVideollamada()">Videollamada</li>
         <li></li>
-        <li class="room" id="archivos" onclick="enviarArchivo()">Enviar archivos</li>
+        <li class="room" id="archivos">Enviar archivos</li>
         <input type="file" id="fileInput" name="files"/>
         <a id="download"></a>
         <button class="button" id="enviarArchivo" onclick="enviarArchivo()"><span>Enviar</span></button>
+        <li></li>
         <li></li>
         <li class="room" id="juego" onclick="iniciarJuego()">Tres en raya</li>
     </div>
 </div>
 <div class="chat">
+<div id="botonMenu" onclick="despliegaMenu()"></div>
         
 <div id="videoContainer">
     <table>
@@ -97,7 +100,9 @@
     <div class="enviar">
         <textarea rows="2" cols="70" id="mensajeEnviar" 
 			placeholder="Escribir mensaje"></textarea>
-        <button class="button" id="botonEnviar" onclick="sendData()" style="vertical-align:middle"><span>Enviar </span></button>
+        <button class="button" id="botonEnviar" onclick="sendData()" style="vertical-align:middle">
+            <span class="texto_responsive" data-desktoptext="Enviar " data-phonetext=">"></span>
+        </button>
     </div>    
 </div>
 

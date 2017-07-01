@@ -312,8 +312,18 @@ function finJuego(){
     }
 }
 
+var video =false;
 function iniciarVideollamada(){
+    video=true;
     document.getElementById('videoContainer').style.display='block';
+    if(isInitiator) {
+        sendChannel.send("startVideo");
+        stop();
+    } else{
+      receiveChannel.send("startVideo");
+      stop();
+      navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);  
+    } 
 }
 
 function finalizarVideollamada(){
@@ -363,10 +373,10 @@ socket.on('created', function (clientes){
     //document.getElementById("user0").insertAdjacentHTML('afterbegin',username);
   // Call getUserMedia()
   //navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
-    //checkAndStart();
+  //checkAndStart();
   console.log('Getting user media with constraints', constraints);
   
-  checkAndStart();
+  //checkAndStart();
 });
 
 // Handle 'full' message coming back from server:
@@ -388,6 +398,7 @@ socket.on('other peer disconnected', function(clientes, username){
     console.log(username+' ha abandonado la conversaci&oacute;n');
     div.insertAdjacentHTML( 'beforeEnd', '<p class="system">'+username+' ha abandonado la conversaci\u00F3n</p><br>');
     actualizarListaNombres(clientes);
+    handleRemoteHangup();
 });
 //Funcion para actualizar la lista de usuarios conectados. Coge el total de clientes y mira los que son de la misma sala
 function actualizarListaNombres(clientes){
@@ -406,6 +417,18 @@ function actualizarListaNombres(clientes){
       }  
 }
 
+var desplegado=false;
+function despliegaMenu(){
+    if(!desplegado){
+        document.getElementById("menu").style.display='block';
+        desplegado=true;
+    } else{
+        document.getElementById("menu").style.display='none';
+        desplegado=false;
+    }
+    
+}
+
 var fileInput = document.querySelector('input#fileInput');
 fileInput.addEventListener('change', handleFileInputChange, false);
 function handleFileInputChange(){
@@ -414,27 +437,35 @@ function handleFileInputChange(){
 
 
 function enviarArchivo() {
-    document.getElementById("enviarArchivo").style.display = 'none';
   var file = fileInput.files[0];
-    if(file.size==0){
-        alert("Seleccione un archivo");
-    }
-  console.log('Enviando archivo');
-  var chunkSize = 100000;
+  var chunkSize = 16384;
+  if (file.size === 0) {
+    alert("Seleccione un archivo");
+    return;
+  }
+var numChunks=Math.ceil(file.size/chunkSize);
+console.log("size: "+file.size);
+console.log("chunksize: "+chunkSize);
+console.log("chunks: "+numChunks);
+ if(isInitiator){
+               sendChannel.send("file");
+               sendChannel.send(file.name);
+               sendChannel.send(file.size);
+                
+          } else {
+               receiveChannel.send("file");
+               receiveChannel.send(file.name);
+               receiveChannel.send(file.size);
+          }
   var sliceFile = function(offset) {
     var reader = new window.FileReader();
     reader.onload = (function() {
       return function(e) {
           if(isInitiator){
-               sendChannel.send("file");
-               sendChannel.send(file.name);
-               sendChannel.send(e.target.result);
-          } else {
-               receiveChannel.send("file");
-               receiveChannel.send(file.name);
-               receiveChannel.send(e.target.result);
+              sendChannel.send(e.target.result);
+          }else {
+              receiveChannel.send(e.target.result);
           }
-       
         if (file.size > offset + e.target.result.byteLength) {
           window.setTimeout(sliceFile, 0, offset + chunkSize);
         }
@@ -446,21 +477,32 @@ function enviarArchivo() {
   sliceFile(0);
 }
 
+//variables necesarias para el envio de ficheros. Explicadas con detalle en la memoria
+var receiveBuffer = [];
+var receivedSize = 0;
+var fileReceivedSize = 0;
 var downloadAnchor = document.querySelector('a#download');
-function onReceiveMessageCallback(event, fileNameReceived) {
-  // trace('Received Message ' + event.data.byteLength);
-    console.log("reciviendo fichero");
-  var receiveBuffer = [];
+function onReceiveMessageCallback(event) {
   receiveBuffer.push(event.data);
-  var receivedSize = event.data.byteLength;
+  receivedSize += event.data.byteLength;
   // we are assuming that our signaling protocol told
   // about the expected file size (and name, hash, etc).
+    console.log(receivedSize+" // "+fileReceivedSize);
+    console.log("ReceivedBuffer: "+receiveBuffer);
+  if (receivedSize == fileReceivedSize) {
+      console.log("in");
     var received = new window.Blob(receiveBuffer);
     receiveBuffer = [];
+
     downloadAnchor.href = URL.createObjectURL(received);
     downloadAnchor.download = fileNameReceived;
     downloadAnchor.textContent = "Haga click para descargar "+fileNameReceived;
     downloadAnchor.style.display = 'block'; 
+      
+    div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">Has recibido un fichero. Mira en el men&uacute; lateral para descargarlo</p><br>'); 
+
+    receivingFile3=false;
+  }
 }
 
 // Handle 'join' message coming back from server:
@@ -468,11 +510,8 @@ function onReceiveMessageCallback(event, fileNameReceived) {
 socket.on('join', function (clientes, username){
   console.log('Another peer made a request to join room ' + room);
   console.log('This peer is the initiator of room ' + room + '!');
-  //var roomClients = actualizarListaNombres(clientes, room);
-  //var roomSize = roomClients.length-1;
-  //document.getElementById("user"+roomSize).insertAdjacentHTML('afterbegin',roomClients[roomSize].username);
   isChannelReady = true;
-    checkAndStart();
+  checkAndStart();
   actualizarListaNombres(clientes);
   div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK"> Se ha conectado '+username+' a la sala '+room+'</p><br>');
 });
@@ -482,16 +521,12 @@ socket.on('join', function (clientes, username){
 socket.on('joined', function (clientes){
   console.log('This peer has joined room ' + room);
   isChannelReady = true;
-  //var roomClients = actualizarListaNombres(clientes, room);
-    //for (var i = 0; i < roomClients.length; i++) {
-      // document.getElementById("user"+i).insertAdjacentHTML('afterbegin',roomClients[i].username);
-    //}
-  // Call getUserMedia()
-  //navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
-   // checkAndStart();
   console.log('Getting user media with constraints', constraints);
   actualizarListaNombres(clientes);
   div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">Se ha conectado con &eacute;xito a la sala '+room+'</p><br>');
+  // Call getUserMedia()
+  //navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
+  console.log('Getting user media with constraints', constraints);
 });
 
 // Server-sent log message...
@@ -503,7 +538,7 @@ socket.on('log', function (array){
 socket.on('message', function (message){
   console.log('Received message:', message);
   if (message.message === 'got user media') {
-    checkAndStart();
+       checkAndStart();   
   } else if (message.message.type === 'offer') {
     if (!isInitiator && !isStarted) {
       checkAndStart();
@@ -537,6 +572,7 @@ function sendMessage(message){
 ////////////////////////////////////////////////////
 // Channel negotiation trigger function
 function checkAndStart() {
+    console.log("isStarted:"+isStarted+" ,ischannelready: "+isChannelReady+" ,video: "+video);
   if (!isStarted && /*typeof localStream != 'undefined' &&*/ isChannelReady) {  
     createPeerConnection();
     isStarted = true;
@@ -549,12 +585,13 @@ function checkAndStart() {
 /////////////////////////////////////////////////////////
 // Peer Connection management...
 function createPeerConnection() {
-    console.log("cretarepeerConnection");
+    console.log("cratePeerConnection");
+    stop();
   try {
     pc = new RTCPeerConnection(pc_config, pc_constraints);
     
     console.log("Calling pc.addStream(localStream)! Initiator: " + isInitiator);
-    //pc.addStream(localStream);
+      if(video) pc.addStream(localStream);
     
     pc.onicecandidate = handleIceCandidate;
     console.log('Created RTCPeerConnnection with:\n' +
@@ -565,9 +602,12 @@ function createPeerConnection() {
     alert('Cannot create RTCPeerConnection object.');
       return;
   }
-
- // pc.onaddstream = handleRemoteStreamAdded;
-//  pc.onremovestream = handleRemoteStreamRemoved;
+    console.log("antes video");
+    if(video) {
+        console.log("dentro video");
+        pc.onaddstream = handleRemoteStreamAdded;
+        pc.onremovestream = handleRemoteStreamRemoved;
+    }
 
   if (isInitiator) {
     try {
@@ -607,21 +647,35 @@ function gotReceiveChannel(event) {
 //controlar los eventos recibidos en datachannel
 var receivingFile=false;
 var receivingFile2=false;
+var receivingFile3=false;
+var fileSize= 0;//totalpaquetes
+var np=0;//contador paquetes
 var fileNameReceived;
 function handleMessage(event) {
   trace('Received message: ' + event.data);
-    if(event.data == "file"){ 
-        console.log("Estado 1");
+    if(event.data=="startVideo"){
+        console.log("stop and start");
+        document.getElementById('videoContainer').style.display='block';
+        video=true;
+        if(!isInitiator){
+          navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);   
+        }
+    } else if(event.data == "file"){ 
+        console.log("Vas a recibir 1 fichero");
         receivingFile=true;
     } else if (receivingFile == true){
-        console.log("Estado 2");
+        console.log("Recibiendo nombre: "+event.data);
         receivingFile = false;
         receivingFile2=true;
         fileNameReceived = event.data;
-    } else if (receivingFile2 ==true){
-        div.insertAdjacentHTML( 'beforeEnd', '<p class="remote">Has recibido un fichero. Mira en el men&uacute; lateral para descargarlo</p><br>');  
-        onReceiveMessageCallback(event, fileNameReceived);
+    } else if (receivingFile2 == true){
+        console.log("Recibiendo tamaño: "+event.data);
         receivingFile2 = false;
+        receivingFile3=true;
+        fileReceivedSize = event.data;
+    }else if (receivingFile3 ==true){
+        console.log("Recibiendo");
+        onReceiveMessageCallback(event, fileNameReceived);
     } else if(event.data=="startGame") { 
         playing=true;
         iniciarJuego();
@@ -735,16 +789,18 @@ function hangup() {
 function handleRemoteHangup() {
   console.log('Session terminated.');
   stop();
-  isInitiator = false;
+  isInitiator = true;
+  //checkAndStart();
 }
 
 function stop() {
+    console.log("stop");
   isStarted = false;
   if (sendChannel) sendChannel.close();
   if (receiveChannel) receiveChannel.close();
   if (pc) pc.close();  
   pc = null;
-  sendButton.disabled=true;
+  //sendButton.disabled=true;
 }
 
 ///////////////////////////////////////////

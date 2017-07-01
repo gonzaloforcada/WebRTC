@@ -7,14 +7,22 @@ body, html {
     background-image: url(public/bg_chat.png);
 }
 
-.texto_responsive:before{
-  content: attr(data-desktoptext);
-}
-
-
 
 #botonMenu{
-    display: none;
+    margin: 20px;
+    display: block;
+    position: fixed;
+    right:0px;
+    width: 80px;
+    height: 80px;
+    background-image: url(public/menu.jpg);
+    background-size: 100%;
+}
+
+@media (max-width:1000px) {
+    .texto_responsive:before {
+        content: attr(data-phonetext);
+    }
 }
 
 
@@ -125,11 +133,13 @@ img.avatar {
 }
 
 .menu {
-    width: 25%;
+    display: none;
+    width: 75%;
     min-height:100%;
     border-right-width: 1px;
-    float: left;
+    position: fixed;
     background-color: #E3E3E3;
+    z-index: 1;
 }
 
 ul {
@@ -156,7 +166,7 @@ li{
 }
 
 .chat {
-    width:75%;
+    width:100%;
     min-height:100%;
     float: left;
     background-image: url(public/bg_chat.png);
@@ -226,7 +236,6 @@ li{
 
 textarea {
     margin: 0px 10px;
-    width:75%;
     resize: none;
     font-size: 20px;
     float:left;
@@ -251,6 +260,13 @@ textarea {
     margin: auto;
 }
 
+#botonEnviar{
+    width: 30px;
+    border-radius: 25%;
+    margin: auto;
+        
+}
+
 .button {
   float:left;
   display: inline-block;
@@ -261,7 +277,6 @@ textarea {
   text-align: center;
   font-size: 25px;
   padding: 12px;
-  width: 200px;
   transition: all 0.5s;
   cursor: pointer;
   margin: 0px 10px;
