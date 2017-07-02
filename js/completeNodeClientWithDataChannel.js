@@ -328,6 +328,8 @@ function iniciarVideollamada(){
 function finalizarVideollamada(){
     if(video){
         video = false;
+        localStream.getTracks()[0].stop();
+        localStream.getTracks()[1].stop();
         checkAndStart();
         document.getElementById('videoContainer').style.display='none';
         if(isInitiator) {
