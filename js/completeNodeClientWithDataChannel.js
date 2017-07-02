@@ -312,22 +312,30 @@ function finJuego(){
     }
 }
 
-var video =false;
+var video = false;
 function iniciarVideollamada(){
     video=true;
     document.getElementById('videoContainer').style.display='block';
+    navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);  
     if(isInitiator) {
         sendChannel.send("startVideo");
-        stop();
     } else{
       receiveChannel.send("startVideo");
-      stop();
-      navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);  
     } 
+    stop();
 }
 
 function finalizarVideollamada(){
-    document.getElementById('videoContainer').style.display='none';
+    if(video){
+        video = false;
+        checkAndStart();
+        document.getElementById('videoContainer').style.display='none';
+        if(isInitiator) {
+            sendChannel.send("endVideo");
+        } else{
+            receiveChannel.send("endVideo");
+        } 
+    }
 }
 
 var urlServer = location.origin;
@@ -348,6 +356,7 @@ function handleUserMedia(stream) {
   source: localStream = stream;
   attachMediaStream(localVideo, stream);
   console.log('Adding local stream.');
+    //pc.addStream(localStream);
   sendMessage('got user media');
 }
 
@@ -538,7 +547,9 @@ socket.on('log', function (array){
 socket.on('message', function (message){
   console.log('Received message:', message);
   if (message.message === 'got user media') {
-       checkAndStart();   
+      if(video){
+          checkAndStart(); 
+      } 
   } else if (message.message.type === 'offer') {
     if (!isInitiator && !isStarted) {
       checkAndStart();
@@ -585,13 +596,11 @@ function checkAndStart() {
 /////////////////////////////////////////////////////////
 // Peer Connection management...
 function createPeerConnection() {
-    console.log("cratePeerConnection");
-    stop();
   try {
     pc = new RTCPeerConnection(pc_config, pc_constraints);
     
     console.log("Calling pc.addStream(localStream)! Initiator: " + isInitiator);
-      if(video) pc.addStream(localStream);
+    if(video) pc.addStream(localStream);
     
     pc.onicecandidate = handleIceCandidate;
     console.log('Created RTCPeerConnnection with:\n' +
@@ -602,12 +611,9 @@ function createPeerConnection() {
     alert('Cannot create RTCPeerConnection object.');
       return;
   }
-    console.log("antes video");
-    if(video) {
-        console.log("dentro video");
-        pc.onaddstream = handleRemoteStreamAdded;
-        pc.onremovestream = handleRemoteStreamRemoved;
-    }
+
+  pc.onaddstream = handleRemoteStreamAdded;
+  pc.onremovestream = handleRemoteStreamRemoved;
 
   if (isInitiator) {
     try {
@@ -654,12 +660,12 @@ var fileNameReceived;
 function handleMessage(event) {
   trace('Received message: ' + event.data);
     if(event.data=="startVideo"){
-        console.log("stop and start");
         document.getElementById('videoContainer').style.display='block';
+        navigator.getUserMedia(constraints,handleUserMedia,handleUserMediaError);
+        stop();
         video=true;
-        if(!isInitiator){
-          navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);   
-        }
+    } else if(event.data == "endVideo"){ 
+        finalizarVideollamada();
     } else if(event.data == "file"){ 
         console.log("Vas a recibir 1 fichero");
         receivingFile=true;
@@ -794,7 +800,7 @@ function handleRemoteHangup() {
 }
 
 function stop() {
-    console.log("stop");
+  console.log("stop");
   isStarted = false;
   if (sendChannel) sendChannel.close();
   if (receiveChannel) receiveChannel.close();
