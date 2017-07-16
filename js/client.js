@@ -187,18 +187,18 @@ function checkWinner(){
        turn =false;
        if(player1){
            gameinfo.innerHTML = "Enhorabuena, has ganado";
-           div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">¡Has ganado!</p><br>'); 
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">\u00A1Has ganado!</p><br>'); 
        } else {
            gameinfo.innerHTML="Has perdido";
-           div.insertAdjacentHTML( 'beforeEnd', '<p class="system">¡Has perdido!</p><br>'); 
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="system">\u00A1Has perdido!</p><br>'); 
        }
    } else if (winner == 2){
        turn =false;
        if(!player1){
            gameinfo.innerHTML="Enhorabuena, has ganado";
-           div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">¡Has ganado!</p><br>'); 
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="systemOK">\u00A1Has ganado!</p><br>'); 
        } else {
-           div.insertAdjacentHTML( 'beforeEnd', '<p class="system">¡Has perdido!</p><br>');
+           div.insertAdjacentHTML( 'beforeEnd', '<p class="system">\u00A1Has perdido!</p><br>');
            gameinfo.innerHTML="Has perdido";
        }
    } else if(numfichas==9){
